@@ -1,18 +1,22 @@
-import { useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 
 import { InspectorPanel } from "./components/InspectorPanel";
 import { TopBar } from "./components/TopBar";
 import { clawcoGraph } from "./data/orgGraph";
+import { loadRuntimeGraph } from "./lib/runtime";
 import { buildInspectorModel } from "./lib/scene-state";
-import { type AgentStatus, type StatusFilter } from "./lib/types";
+import { type AgentStatus, type OrgGraph, type StatusFilter } from "./lib/types";
 import { ControlRoomScene } from "./scene/ControlRoomScene";
 
-const ROOT_ID =
-  clawcoGraph.agents.find((agent) => agent.managerId == null)?.id ??
-  clawcoGraph.agents[0].id;
+const DEFAULT_DESCRIPTION =
+  "A cinematic org view for understanding hierarchy, collaboration, and the current pulse of a multi-agent team.";
 
-function getStatusCounts() {
-  return clawcoGraph.agents.reduce<Record<AgentStatus, number>>(
+function getRootId(graph: OrgGraph) {
+  return graph.agents.find((agent) => agent.managerId == null)?.id ?? graph.agents[0].id;
+}
+
+function getStatusCounts(graph: OrgGraph) {
+  return graph.agents.reduce<Record<AgentStatus, number>>(
     (counts, agent) => {
       counts[agent.status] += 1;
       return counts;
@@ -28,15 +32,49 @@ function getStatusCounts() {
 }
 
 export default function App() {
-  const [selectedId, setSelectedId] = useState(ROOT_ID);
+  const [graph, setGraph] = useState(clawcoGraph);
+  const [source, setSource] = useState<"demo" | "snapshot">("demo");
+  const [snapshotError, setSnapshotError] = useState<string | undefined>();
+  const [teamName, setTeamName] = useState("Clawco");
+  const [teamDescription, setTeamDescription] = useState(DEFAULT_DESCRIPTION);
+  const [selectedId, setSelectedId] = useState(getRootId(clawcoGraph));
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [cameraResetToken, setCameraResetToken] = useState(0);
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
 
-  const statusCounts = useMemo(() => getStatusCounts(), []);
+  useEffect(() => {
+    let canceled = false;
+
+    void loadRuntimeGraph(clawcoGraph).then((state) => {
+      if (canceled) {
+        return;
+      }
+
+      startTransition(() => {
+        setGraph(state.graph);
+        setSource(state.source);
+        setSnapshotError(state.error);
+        setSelectedId(getRootId(state.graph));
+        if (state.snapshot != null) {
+          setTeamName(state.snapshot.team.name);
+          setTeamDescription(
+            state.snapshot.team.description && state.snapshot.team.description.length > 0
+              ? state.snapshot.team.description
+              : DEFAULT_DESCRIPTION
+          );
+        }
+      });
+    });
+
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
+  const statusCounts = useMemo(() => getStatusCounts(graph), [graph]);
   const inspector = useMemo(
-    () => buildInspectorModel(clawcoGraph, selectedId),
-    [selectedId]
+    () => buildInspectorModel(graph, selectedId),
+    [graph, selectedId]
   );
 
   const handleSelectAgent = (agentId: string) => {
@@ -45,7 +83,7 @@ export default function App() {
   };
 
   const handleReset = () => {
-    setSelectedId(ROOT_ID);
+    setSelectedId(getRootId(graph));
     setCameraResetToken((token) => token + 1);
   };
 
@@ -56,6 +94,11 @@ export default function App() {
       <div className="app-shell__grid" />
 
       <TopBar
+        teamName={teamName}
+        teamDescription={teamDescription}
+        source={source}
+        snapshotError={snapshotError}
+        graph={graph}
         statusCounts={statusCounts}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
@@ -75,7 +118,7 @@ export default function App() {
             </div>
 
             <ControlRoomScene
-              graph={clawcoGraph}
+              graph={graph}
               selectedId={selectedId}
               statusFilter={statusFilter}
               cameraResetToken={cameraResetToken}

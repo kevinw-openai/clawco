@@ -1,5 +1,22 @@
 import type { OrgGraph } from "../lib/types";
 
+function emptyAgentTaskState() {
+  return {
+    workspace: null,
+    agentDir: null,
+    subagents: [],
+    stats: {
+      queued: 0,
+      inProgress: 0,
+      completed: 0,
+      failed: 0,
+      canceled: 0,
+      activeTaskIds: [],
+    },
+    activeTasks: [],
+  };
+}
+
 export const clawcoGraph: OrgGraph = {
   agents: [
     {
@@ -12,6 +29,8 @@ export const clawcoGraph: OrgGraph = {
       workload: 0.74,
       summary:
         "Maintains the global plan, allocates agent attention, and keeps the whole organization pointed at the current objective.",
+      ...emptyAgentTaskState(),
+      subagents: ["loom", "quarry", "relay", "prism"],
     },
     {
       id: "loom",
@@ -23,6 +42,8 @@ export const clawcoGraph: OrgGraph = {
       workload: 0.83,
       summary:
         "Breaks the objective into workstreams, sequences handoffs, and routes scoped asks to the right specialists.",
+      ...emptyAgentTaskState(),
+      subagents: ["glyph", "signal"],
     },
     {
       id: "quarry",
@@ -34,6 +55,7 @@ export const clawcoGraph: OrgGraph = {
       workload: 0.68,
       summary:
         "Pulls together source material, surfaces relevant evidence, and maps ambiguity before execution begins.",
+      ...emptyAgentTaskState(),
     },
     {
       id: "relay",
@@ -45,6 +67,8 @@ export const clawcoGraph: OrgGraph = {
       workload: 0.71,
       summary:
         "Turns approved plans into concrete outputs, shipping assets and handling the final operational handoff.",
+      ...emptyAgentTaskState(),
+      subagents: ["ember"],
     },
     {
       id: "prism",
@@ -56,6 +80,7 @@ export const clawcoGraph: OrgGraph = {
       workload: 0.48,
       summary:
         "Audits changes for correctness, flags regressions, and blocks work that is still carrying unresolved risk.",
+      ...emptyAgentTaskState(),
     },
     {
       id: "glyph",
@@ -67,6 +92,7 @@ export const clawcoGraph: OrgGraph = {
       workload: 0.64,
       summary:
         "Refines plan details, pressure-tests assumptions, and produces briefs that keep downstream work tight and local.",
+      ...emptyAgentTaskState(),
     },
     {
       id: "signal",
@@ -78,6 +104,7 @@ export const clawcoGraph: OrgGraph = {
       workload: 0.57,
       summary:
         "Tracks who is paired with whom, monitors work overlap, and nudges the right agents into active collaboration.",
+      ...emptyAgentTaskState(),
     },
     {
       id: "ember",
@@ -89,6 +116,7 @@ export const clawcoGraph: OrgGraph = {
       workload: 0.79,
       summary:
         "Packages the final artifact, coordinates the finish, and ensures the finished work lands with crisp presentation.",
+      ...emptyAgentTaskState(),
     },
   ],
   collaborations: [

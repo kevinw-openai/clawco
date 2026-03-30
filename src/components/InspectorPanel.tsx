@@ -91,6 +91,37 @@ function InspectorContent({
       </section>
 
       <section className="inspector-section">
+        <div className="inspector-section__title">Task load</div>
+        <div className="inspector-list">
+          <div className="inspector-section__empty">
+            Queued {inspector.selected.stats.queued} | In progress {inspector.selected.stats.inProgress}
+          </div>
+          <div className="inspector-section__empty">
+            Completed {inspector.selected.stats.completed} | Failed {inspector.selected.stats.failed}
+          </div>
+        </div>
+      </section>
+
+      <section className="inspector-section">
+        <div className="inspector-section__title">Active tasks</div>
+        {inspector.selected.activeTasks.length > 0 ? (
+          <div className="inspector-list">
+            {inspector.selected.activeTasks.slice(0, 4).map((task) => (
+              <div key={task.id} className="collaboration-link">
+                <div>
+                  <strong>{task.title}</strong>
+                  <small>{task.status}</small>
+                </div>
+                <span>{task.cancelRequested ? "cancel" : "live"}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="inspector-section__empty">No active tasks assigned.</div>
+        )}
+      </section>
+
+      <section className="inspector-section">
         <div className="inspector-section__title">Manager</div>
         {inspector.manager ? (
           <AgentLinkButton
