@@ -21,6 +21,11 @@ export type AgentNode = {
   status: AgentStatus;
   workload: number;
   summary: string;
+  workspace: string | null;
+  agentDir: string | null;
+  subagents: string[];
+  stats: AgentTaskStats;
+  activeTasks: ActiveTaskSummary[];
 };
 
 export type CollaborationEdge = {
@@ -33,6 +38,51 @@ export type CollaborationEdge = {
 export type OrgGraph = {
   agents: AgentNode[];
   collaborations: CollaborationEdge[];
+};
+
+export type AgentTaskStats = {
+  queued: number;
+  inProgress: number;
+  completed: number;
+  failed: number;
+  canceled: number;
+  activeTaskIds: string[];
+};
+
+export type ActiveTaskSummary = {
+  id: string;
+  title: string;
+  status: string;
+  createdByAgentId: string;
+  assignedToAgentId: string;
+  updatedAt: string;
+  cancelRequested: boolean;
+};
+
+export type TaskRecord = {
+  id: string;
+  parentTaskId: string | null;
+  title: string;
+  status: string;
+  createdByAgentId: string;
+  assignedToAgentId: string;
+  createdAt: string;
+  updatedAt: string;
+  finishedAt: string | null;
+  cancelRequested: boolean;
+};
+
+export type ClawcoSnapshot = {
+  generatedAt: string;
+  team: {
+    name: string;
+    description?: string;
+    projectDir?: string;
+    openclawHome?: string;
+  };
+  agents: AgentNode[];
+  collaborations: CollaborationEdge[];
+  tasks: TaskRecord[];
 };
 
 export type PositionedAgentNode = AgentNode & {

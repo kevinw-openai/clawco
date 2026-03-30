@@ -1,8 +1,13 @@
 import type { CSSProperties } from "react";
 
-import { STATUS_META, type AgentStatus, type StatusFilter } from "../lib/types";
+import { STATUS_META, type AgentStatus, type OrgGraph, type StatusFilter } from "../lib/types";
 
 type TopBarProps = {
+  teamName: string;
+  teamDescription: string;
+  source: "demo" | "snapshot";
+  snapshotError?: string;
+  graph: OrgGraph;
   statusCounts: Record<AgentStatus, number>;
   statusFilter: StatusFilter;
   onStatusFilterChange: (statusFilter: StatusFilter) => void;
@@ -19,23 +24,45 @@ const FILTER_ORDER: StatusFilter[] = [
 ];
 
 export function TopBar({
+  teamName,
+  teamDescription,
+  source,
+  snapshotError,
+  graph,
   statusCounts,
   statusFilter,
   onStatusFilterChange,
   onReset,
 }: TopBarProps) {
+  const taskTotals = graph.agents.reduce(
+    (totals, agent) => {
+      totals.queued += agent.stats.queued;
+      totals.inProgress += agent.stats.inProgress;
+      totals.failed += agent.stats.failed;
+      return totals;
+    },
+    { queued: 0, inProgress: 0, failed: 0 }
+  );
+
   return (
     <header className="topbar">
       <div className="brand-block">
         <span className="brand-block__eyebrow">Command lattice</span>
         <div className="brand-block__title-row">
-          <h1>Clawco</h1>
-          <span className="brand-block__signal">live mock organization</span>
+          <h1>{teamName}</h1>
+          <span className="brand-block__signal">
+            {source === "snapshot" ? "live snapshot" : "demo fallback"}
+          </span>
         </div>
-        <p>
-          A cinematic org view for understanding hierarchy, collaboration, and
-          the current pulse of a multi-agent team.
-        </p>
+        <p>{teamDescription}</p>
+        <div className="legend-strip">
+          <span className="legend-strip__item">Queued {taskTotals.queued}</span>
+          <span className="legend-strip__item">In progress {taskTotals.inProgress}</span>
+          <span className="legend-strip__item">Failed {taskTotals.failed}</span>
+        </div>
+        {snapshotError ? (
+          <p className="topbar__note">Snapshot unavailable, showing demo data: {snapshotError}</p>
+        ) : null}
       </div>
 
       <div className="topbar__controls">
