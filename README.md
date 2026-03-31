@@ -2,6 +2,10 @@
 
 Clawco is a cinematic Three.js command center for exploring how a multi-agent organization is structured, who collaborates with whom, and what each agent is working on.
 
+Example capture from a squad-built run:
+
+![Clawco example capture](./docs/chrome-capture-2026-03-30-2.gif)
+
 ## Scripts
 
 - `pnpm dev` starts the local Vite dev server.
